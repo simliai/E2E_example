@@ -1,101 +1,99 @@
-import Image from "next/image";
+'use client';
+import { DailyProvider, } from "@daily-co/daily-react";
+import { useRef, useState } from "react";
+import DailyIframe, { DailyCall } from '@daily-co/daily-js';
+import Tile from "@/Components/Tile";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [tempRoomUrl, setTempRoomUrl] = useState<string>("");
+  const [callObject, setCallObject] = useState<DailyCall | null>(null);
+  const myCallObjRef = useRef<DailyCall | null>(null);
+  
+  const [chatbotId, setChatbotId] = useState<string | null>(null);
+  
+  const loadChatbot = async () => {
+    if (myCallObjRef.current) {
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      let chatbotFound: boolean = false;
+
+      const participants = myCallObjRef.current.participants();
+      for (const [key, participant] of Object.entries(participants)) {
+        if (participant.user_name === "Chatbot") {
+          setChatbotId(participant.session_id);
+          chatbotFound = true;
+          break; // Stop iteration if you found the Chatbot
+        }
+      }
+      if (!chatbotFound) {
+        setTimeout(loadChatbot, 1000);
+      }
+    } else {
+      setTimeout(loadChatbot, 1000);
+    }
+  };
+
+  const handleLeaveRoom = async () => {
+    if (callObject) {
+      await callObject.leave();
+      setCallObject(null);
+    } else {
+      console.log("CallObject is null");
+    }
+  }
+
+  const handleMute = async () => {
+    if (callObject) {
+      callObject.setLocalAudio(false);
+    } else {
+      console.log("CallObject is null");
+    }
+  }
+
+
+  return (
+    <div className="flex flex-col items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+      {
+        callObject && (
+          <DailyProvider callObject={callObject}>
+            {
+              chatbotId && (
+                <Tile key={chatbotId} id={chatbotId} />
+
+              )
+            }
+          </DailyProvider>
+        )
+      }
+
+      <input type="text" className="bg-slate-100 px-2 py-1 rounded-md" placeholder="Room URL" value={tempRoomUrl} onChange={(e) => setTempRoomUrl(e.target.value)} />
+
+      <div className="flex flex-row gap-2">
+
+        <button className="bg-green-500 text-white px-2 py-1 rounded-md" onClick={async () => {
+          console.log("Joining room", tempRoomUrl)
+
+          let newCallObject = DailyIframe.getCallInstance();
+
+          if (newCallObject === undefined) {
+            newCallObject = DailyIframe.createCallObject({
+              videoSource: false,
+            });
+          }
+
+          newCallObject.setUserName("My name");
+
+          await newCallObject.join({ url: tempRoomUrl });
+          myCallObjRef.current = newCallObject;
+          console.log("Joined the room with callObject", newCallObject);
+          setCallObject(newCallObject);
+
+          setTimeout(loadChatbot, 2000);
+
+
+        }}>Join room</button>
+        <button className="bg-red-500 text-white px-2 py-1 rounded-md" onClick={handleLeaveRoom}>Leave room</button>
+        <button className="bg-slate-500 text-white px-2 py-1 rounded-md" onClick={handleMute}>Mute</button>
+      </div>
     </div>
   );
 }
