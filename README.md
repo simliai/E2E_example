@@ -4,6 +4,7 @@
 # Simli End 2 end sample repo
 
 ![image](/images/screenshot.png)
+![image](/images/screenshot2.png)
 
 
 # Setup
