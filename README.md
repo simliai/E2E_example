@@ -21,7 +21,7 @@ cd E2E_example
 
 Install dependencies
 ```
-npm install
+npm install --force
 ```
 
 Run the example
