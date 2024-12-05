@@ -13,6 +13,7 @@ export default function Home() {
   const [faceId, setFaceId] = useState<string>("");
   const [voiceId, setVoiceId] = useState<string>("");
   const [prompt, setPrompt] = useState<string>("");
+  const [firstMessage, setFirstMessage] = useState<string>("");
 
   const loadChatbot = async () => {
     if (myCallObjRef.current) {
@@ -55,7 +56,7 @@ export default function Home() {
   const handleJoinRoom = async () => {
     let roomUrl = tempRoomUrl.toString();
     if (roomUrl === "") {
-      if (apiKey.trim() === "" || faceId.trim() === "" || voiceId.trim() === "" || prompt.trim() === "") {
+      if (apiKey.trim() === "" || faceId.trim() === "" || voiceId.trim() === "" || prompt.trim() === "" || firstMessage.trim() === "") {
         console.log("API Key, Face ID, Voice ID, and Prompt are required");
         window.alert("API Key, Face ID, Voice ID, and Prompt are required");
         return;
@@ -70,7 +71,8 @@ export default function Home() {
           apiKey: apiKey.trim(),
           faceId: faceId.trim(),
           voiceId: voiceId.trim(),
-          prompt: prompt.trim(),
+          systemPrompt: prompt.trim(),
+          firstMessage: firstMessage.trim(),
         }),
       })
 
@@ -123,7 +125,8 @@ export default function Home() {
               <input type="text" className="bg-slate-100 px-2 py-1 rounded-md" placeholder="API Key" value={apiKey} onChange={(e) => setApiKey(e.target.value)} />
               <input type="text" className="bg-slate-100 px-2 py-1 rounded-md" placeholder="Face ID" value={faceId} onChange={(e) => setFaceId(e.target.value)} />
               <input type="text" className="bg-slate-100 px-2 py-1 rounded-md" placeholder="Voice ID" value={voiceId} onChange={(e) => setVoiceId(e.target.value)} />
-              <textarea className="bg-slate-100 px-2 py-1 rounded-md" placeholder="Prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+              <textarea className="bg-slate-100 px-2 py-1 rounded-md" placeholder="System Prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+              <textarea className="bg-slate-100 px-2 py-1 rounded-md" placeholder="First Message" value={firstMessage} onChange={(e) => setFirstMessage(e.target.value)} />
             </div>
           </div>
         )
