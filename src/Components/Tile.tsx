@@ -2,15 +2,19 @@ import './Tile.css';
 import { useEffect, useRef, useState } from 'react';
 import { useMediaTrack } from '@daily-co/daily-react';
 
-export default function Tile({ id }: any) {
+interface TileProps {
+  id: string;
+}
+
+export default function Tile({ id }: TileProps) {
   const videoTrack = useMediaTrack(id, 'video');
   const audioTrack = useMediaTrack(id, 'audio');
 
   const [videoSrcObjectSet, setVideoSrcObjectSet] = useState(false);
   const [audioSrcObjectSet, setAudioSrcObjectSet] = useState(false);
 
-  const videoElement = useRef<any>(null);
-  const audioElement = useRef<any>(null);
+  const videoElement = useRef<HTMLVideoElement | null>(null);
+  const audioElement = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     const videoRef = videoElement.current;

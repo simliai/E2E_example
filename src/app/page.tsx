@@ -21,7 +21,7 @@ export default function Home() {
       let chatbotFound: boolean = false;
 
       const participants = myCallObjRef.current.participants();
-      for (const [key, participant] of Object.entries(participants)) {
+      for (const [, participant] of Object.entries(participants)) {
         if (participant.user_name === "Chatbot") {
           setChatbotId(participant.session_id);
           chatbotFound = true;
@@ -95,8 +95,6 @@ export default function Home() {
     setCallObject(newCallObject);
 
     setTimeout(loadChatbot, 2000);
-
-
   }
 
   return (
