@@ -1,8 +1,16 @@
 'use client';
-import { DailyProvider, } from "@daily-co/daily-react";
+import { DailyProvider, useParticipantIds, } from "@daily-co/daily-react";
 import { useRef, useState } from "react";
 import DailyIframe, { DailyCall } from '@daily-co/daily-js';
 import Tile from "@/Components/Tile";
+
+type E2EBody = {
+  apiKey: string;
+  faceId: string;
+  voiceId: string;
+  systemPrompt?: string;
+  firstMessage?: string;
+}
 
 export default function Home() {
   const [tempRoomUrl, setTempRoomUrl] = useState<string>("");
@@ -14,27 +22,6 @@ export default function Home() {
   const [voiceId, setVoiceId] = useState<string>("");
   const [prompt, setPrompt] = useState<string>("");
   const [firstMessage, setFirstMessage] = useState<string>("");
-
-  const loadChatbot = async () => {
-    if (myCallObjRef.current) {
-
-      let chatbotFound: boolean = false;
-
-      const participants = myCallObjRef.current.participants();
-      for (const [, participant] of Object.entries(participants)) {
-        if (participant.user_name === "Chatbot") {
-          setChatbotId(participant.session_id);
-          chatbotFound = true;
-          break; // Stop iteration if you found the Chatbot
-        }
-      }
-      if (!chatbotFound) {
-        setTimeout(loadChatbot, 1000);
-      }
-    } else {
-      setTimeout(loadChatbot, 1000);
-    }
-  };
 
   const handleLeaveRoom = async () => {
     if (callObject) {
@@ -56,29 +43,39 @@ export default function Home() {
   const handleJoinRoom = async () => {
     let roomUrl = tempRoomUrl.toString();
     if (roomUrl === "") {
-      if (apiKey.trim() === "" || faceId.trim() === "" || voiceId.trim() === "" || prompt.trim() === "" || firstMessage.trim() === "") {
+      if (apiKey.trim() === "" || faceId.trim() === "" || voiceId.trim() === "") {
         console.log("API Key, Face ID, Voice ID, and Prompt are required");
         window.alert("API Key, Face ID, Voice ID, and Prompt are required");
         return;
       }
+      const body: E2EBody = {
+        apiKey: apiKey.trim(),
+        faceId: faceId.trim(),
+        voiceId: voiceId.trim(),
+        systemPrompt: prompt.trim(),
+        firstMessage: firstMessage.trim(),
+      }
+      // Remove systemPrompt and firstMessage if they are empty
+      if (prompt.trim() === "") {
+        delete body.systemPrompt;
+      }
+      if (firstMessage.trim() === "") {
+        delete body.firstMessage;
+      }
+
       // Call the API to get the room URL
       const response = await fetch("https://api.simli.ai/startE2ESession", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          apiKey: apiKey.trim(),
-          faceId: faceId.trim(),
-          voiceId: voiceId.trim(),
-          systemPrompt: prompt.trim(),
-          firstMessage: firstMessage.trim(),
-        }),
+        body: JSON.stringify(body),
       })
 
       const data = await response.json();
       roomUrl = data.roomUrl;
     }
+
     let newCallObject = DailyIframe.getCallInstance();
 
     if (newCallObject === undefined) {
@@ -92,9 +89,17 @@ export default function Home() {
     await newCallObject.join({ url: roomUrl });
     myCallObjRef.current = newCallObject;
     console.log("Joined the room with callObject", newCallObject);
-    setCallObject(newCallObject);
+    
+    myCallObjRef.current.on('participant-joined', (event) => {
+      console.log('joining-meeting event', event);
+      const participantId = event.participant.session_id;
+      const userName = event.participant.user_name;
+      if (userName === "Chatbot" && chatbotId === null) {
+        setChatbotId(participantId);
+      }
+    })
 
-    setTimeout(loadChatbot, 2000);
+    setCallObject(newCallObject);
   }
 
   return (
@@ -135,7 +140,32 @@ export default function Home() {
         <button className="bg-green-500 text-white px-2 py-1 rounded-md" onClick={handleJoinRoom}>Join room</button>
         <button className="bg-red-500 text-white px-2 py-1 rounded-md" onClick={handleLeaveRoom}>Leave room</button>
         <button className="bg-slate-500 text-white px-2 py-1 rounded-md" onClick={handleMute}>Mute</button>
+        <Participants />
       </div>
+    </div>
+  );
+}
+
+
+function Participants() {
+  const participantIds = useParticipantIds({
+    filter: 'remote',
+    sort: 'user_name',
+  });
+
+  return (
+    <div className="flex flex-col">
+      <h1>Participants</h1>
+      <ul>
+
+        {participantIds.map((id: string) => (
+          <li key={id}>
+            <Tile id={id} />
+          </li>
+
+        ))}
+      </ul>
+
     </div>
   );
 }
