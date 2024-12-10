@@ -1,5 +1,5 @@
 'use client';
-import { DailyProvider, useParticipantIds, } from "@daily-co/daily-react";
+import { DailyProvider } from "@daily-co/daily-react";
 import { useRef, useState } from "react";
 import DailyIframe, { DailyCall } from '@daily-co/daily-js';
 import Tile from "@/Components/Tile";
@@ -140,32 +140,8 @@ export default function Home() {
         <button className="bg-green-500 text-white px-2 py-1 rounded-md" onClick={handleJoinRoom}>Join room</button>
         <button className="bg-red-500 text-white px-2 py-1 rounded-md" onClick={handleLeaveRoom}>Leave room</button>
         <button className="bg-slate-500 text-white px-2 py-1 rounded-md" onClick={handleMute}>Mute</button>
-        <Participants />
       </div>
     </div>
   );
 }
 
-
-function Participants() {
-  const participantIds = useParticipantIds({
-    filter: 'remote',
-    sort: 'user_name',
-  });
-
-  return (
-    <div className="flex flex-col">
-      <h1>Participants</h1>
-      <ul>
-
-        {participantIds.map((id: string) => (
-          <li key={id}>
-            <Tile id={id} />
-          </li>
-
-        ))}
-      </ul>
-
-    </div>
-  );
-}
